@@ -2,7 +2,12 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useRoomStore } from '../../store/roomStore'
-import { Button } from '../ui/Button'
+
+const STATUS_BADGE = {
+  voting:   { label: 'Votando',  cls: 'bg-primary' },
+  revealed: { label: 'Revelado', cls: 'bg-success' },
+  closed:   { label: 'Cerrado',  cls: 'bg-secondary' },
+}
 
 export function RoomHeader() {
   const room = useRoomStore((s) => s.room)
@@ -24,39 +29,35 @@ export function RoomHeader() {
     navigate('/')
   }
 
-  const statusLabel = {
-    voting: '🗳 Votando',
-    revealed: '👁 Revelado',
-    closed: '✅ Cerrado',
-  }
+  const status = STATUS_BADGE[currentRound?.status]
 
   return (
-    <header className="flex items-center justify-between gap-4 pb-4 border-b border-slate-800">
-      <div className="flex items-center gap-4 min-w-0">
-        <div>
-          <h1 className="text-lg font-bold text-white truncate">{room?.name ?? '…'}</h1>
-          {currentRound && (
-            <span className="text-xs text-slate-400">
-              {statusLabel[currentRound.status] ?? currentRound.status}
-            </span>
+    <nav className="navbar border-bottom border-secondary px-0 mb-3" style={{ background: 'var(--bs-card-bg)' }}>
+      <div className="container-fluid px-3">
+        {/* Left: room name + status */}
+        <div className="d-flex align-items-center gap-2">
+          <i className="bi bi-suit-spade-fill text-primary fs-5"></i>
+          <span className="fw-bold text-light fs-5">{room?.name ?? '…'}</span>
+          {status && (
+            <span className={`badge ${status.cls}`} style={{ fontSize: '0.7rem' }}>{status.label}</span>
           )}
         </div>
-      </div>
 
-      <div className="flex items-center gap-2 shrink-0">
-        <button
-          onClick={copyCode}
-          className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg px-3 py-1.5 transition-colors"
-        >
-          <span className="font-mono font-bold text-slate-200 tracking-widest text-sm">
+        {/* Right: code + leave */}
+        <div className="d-flex align-items-center gap-2">
+          <button
+            className="btn btn-sm btn-outline-secondary room-code-badge"
+            onClick={copyCode}
+            title="Copiar código"
+          >
+            <i className={`bi ${copied ? 'bi-check-lg text-success' : 'bi-clipboard'} me-1`}></i>
             {room?.code}
-          </span>
-          <span className="text-xs text-slate-500">{copied ? '✓ Copiado' : 'Copiar'}</span>
-        </button>
-        <Button variant="ghost" size="sm" onClick={handleLeave}>
-          Salir
-        </Button>
+          </button>
+          <button className="btn btn-sm btn-outline-danger" onClick={handleLeave}>
+            <i className="bi bi-box-arrow-right me-1"></i>Salir
+          </button>
+        </div>
       </div>
-    </header>
+    </nav>
   )
 }

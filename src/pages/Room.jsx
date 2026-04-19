@@ -16,7 +16,6 @@ export default function Room() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
 
-  const localParticipant = useRoomStore((s) => s.localParticipant)
   const room = useRoomStore((s) => s.room)
   const currentRound = useRoomStore((s) => s.currentRound)
 
@@ -24,21 +23,12 @@ export default function Room() {
 
   useEffect(() => {
     const stored = localStorage.getItem('pp_participant')
-    if (!stored) {
-      navigate('/')
-      return
-    }
-    // Cargar sala y verificar que el participante pertenece a esta sala
+    if (!stored) { navigate('/'); return }
+
     refetch().then((roomData) => {
-      if (!roomData) {
-        navigate('/')
-        return
-      }
+      if (!roomData) { navigate('/'); return }
       const participant = JSON.parse(stored)
-      if (participant.room_id !== roomData.id) {
-        navigate('/')
-        return
-      }
+      if (participant.room_id !== roomData.id) { navigate('/'); return }
       setLoading(false)
     })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -49,35 +39,40 @@ export default function Room() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-slate-400 animate-pulse">Cargando sala…</div>
+      <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '60vh' }}>
+        <div className="text-center text-secondary">
+          <div className="spinner-border text-primary mb-3" role="status"></div>
+          <p className="mb-0">Cargando sala…</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex flex-col max-w-6xl mx-auto px-4 py-6 gap-6">
+    <div className="container-xl py-4">
       <RoomHeader />
+      <div className="row g-4">
 
-      <div className="flex flex-col lg:flex-row gap-6 flex-1">
         {/* Sidebar — participantes */}
-        <aside className="w-full lg:w-72 shrink-0">
-          <ParticipantList />
-        </aside>
+        <div className="col-12 col-lg-3">
+          <div className="card border-secondary h-100">
+            <div className="card-body">
+              <ParticipantList />
+            </div>
+          </div>
+        </div>
 
         {/* Main — votación */}
-        <main className="flex-1 flex flex-col gap-6">
-          {/* Controles del host */}
+        <div className="col-12 col-lg-9 d-flex flex-column gap-3">
           <HostControls />
-
-          {/* Resultados (solo cuando está revelado) */}
           <VotingResults />
-
-          {/* Mazo de cartas */}
-          <div className="flex-1 flex items-center justify-center">
-            <CardDeck />
+          <div className="card border-secondary flex-grow-1">
+            <div className="card-body d-flex align-items-center justify-content-center py-5">
+              <CardDeck />
+            </div>
           </div>
-        </main>
+        </div>
+
       </div>
     </div>
   )

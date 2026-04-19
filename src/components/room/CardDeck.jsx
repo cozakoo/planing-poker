@@ -16,32 +16,28 @@ export function CardDeck() {
   async function handleSelect(value) {
     if (isRevealed || !currentRound || !localParticipant) return
     setSelectedCard(value)
-    await castVote({
-      roundId: currentRound.id,
-      participantId: localParticipant.id,
-      value,
-    })
+    await castVote({ roundId: currentRound.id, participantId: localParticipant.id, value })
   }
 
   if (!currentRound) return null
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <p className="text-sm text-slate-400">
-        {isRevealed ? 'Ronda revelada' : selectedCard ? `Votaste: ${selectedCard}` : 'Elegí tu carta'}
+    <div className="text-center">
+      <p className="text-secondary small mb-3">
+        {isRevealed
+          ? <><i className="bi bi-eye me-1"></i>Ronda revelada</>
+          : selectedCard
+          ? <><i className="bi bi-check-circle-fill text-primary me-1"></i>Votaste: <strong className="text-light">{selectedCard}</strong></>
+          : <><i className="bi bi-hand-index me-1"></i>Elegí tu carta</>
+        }
       </p>
-      <div className="flex flex-wrap justify-center gap-2">
+      <div className="d-flex flex-wrap justify-content-center gap-2">
         {cards.map((value) => {
           let state = 'unselected'
           if (isRevealed) state = 'disabled'
           else if (selectedCard === value) state = 'selected'
           return (
-            <Card
-              key={value}
-              value={value}
-              state={state}
-              onClick={() => handleSelect(value)}
-            />
+            <Card key={value} value={value} state={state} onClick={() => handleSelect(value)} />
           )
         })}
       </div>

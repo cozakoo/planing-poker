@@ -14,51 +14,54 @@ export function VotingResults() {
   const consensus = hasConsensus(votes)
 
   return (
-    <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-5 space-y-4">
-      {consensus ? (
-        <div className="text-center space-y-1">
-          <div className="text-4xl">🎉</div>
-          <p className="text-emerald-400 font-semibold">¡Consenso!</p>
-          <p className="text-3xl font-bold text-white">{votes[0].value}</p>
-        </div>
-      ) : (
-        <div className="flex justify-around text-center">
-          {avg !== null && (
-            <div>
-              <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Promedio</p>
-              <p className="text-2xl font-bold text-white">{avg}</p>
-            </div>
-          )}
-          <div>
-            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
-              {modes.length === 1 ? 'Moda' : 'Empate'}
-            </p>
-            <p className="text-2xl font-bold text-white">{modes.join(' / ')}</p>
+    <div className="card border-secondary">
+      <div className="card-body">
+        {consensus ? (
+          <div className="text-center py-2">
+            <div className="fs-1 mb-1">🎉</div>
+            <p className="text-success fw-semibold mb-1">¡Consenso!</p>
+            <span className="display-5 fw-bold text-light">{votes[0].value}</span>
           </div>
-          <div>
-            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Votos</p>
-            <p className="text-2xl font-bold text-white">{votes.length}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Distribución */}
-      {!consensus && (
-        <div className="space-y-2">
-          {dist.map(({ value, count, pct }) => (
-            <div key={value} className="flex items-center gap-3">
-              <span className="w-10 text-right text-sm font-bold text-slate-300">{value}</span>
-              <div className="flex-1 bg-slate-700 rounded-full h-2 overflow-hidden">
-                <div
-                  className="h-full bg-brand-500 rounded-full transition-all duration-500"
-                  style={{ width: `${pct}%` }}
-                />
+        ) : (
+          <div className="row text-center mb-3 g-3">
+            {avg !== null && (
+              <div className="col">
+                <div className="text-secondary small text-uppercase mb-1" style={{ letterSpacing: '0.08em' }}>Promedio</div>
+                <div className="fs-3 fw-bold text-light">{avg}</div>
               </div>
-              <span className="text-xs text-slate-500 w-10">{count}x ({pct}%)</span>
+            )}
+            <div className="col">
+              <div className="text-secondary small text-uppercase mb-1" style={{ letterSpacing: '0.08em' }}>
+                {modes.length === 1 ? 'Moda' : 'Empate'}
+              </div>
+              <div className="fs-3 fw-bold text-light">{modes.join(' / ')}</div>
             </div>
-          ))}
-        </div>
-      )}
+            <div className="col">
+              <div className="text-secondary small text-uppercase mb-1" style={{ letterSpacing: '0.08em' }}>Votos</div>
+              <div className="fs-3 fw-bold text-light">{votes.length}</div>
+            </div>
+          </div>
+        )}
+
+        {!consensus && (
+          <div className="d-flex flex-column gap-2 mt-2">
+            {dist.map(({ value, count, pct }) => (
+              <div key={value} className="d-flex align-items-center gap-2">
+                <span className="text-light fw-bold text-end" style={{ width: 36, fontSize: '0.9rem' }}>{value}</span>
+                <div className="flex-grow-1">
+                  <div className="progress" style={{ height: 8, backgroundColor: 'var(--bs-secondary-bg)' }}>
+                    <div
+                      className="progress-bar"
+                      style={{ width: `${pct}%`, transition: 'width 0.5s ease' }}
+                    />
+                  </div>
+                </div>
+                <span className="text-secondary" style={{ width: 60, fontSize: '0.8rem' }}>{count}x ({pct}%)</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

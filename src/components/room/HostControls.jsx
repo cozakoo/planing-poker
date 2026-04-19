@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useRoomStore } from '../../store/roomStore'
-import { Button } from '../ui/Button'
 
 export function HostControls() {
   const room = useRoomStore((s) => s.room)
@@ -29,51 +28,40 @@ export function HostControls() {
   async function handleNewRound() {
     if (!room) return
     setLoading(true)
-
-    // Cerrar ronda actual
     if (currentRound) {
-      await supabase
-        .from('rounds')
-        .update({ status: 'closed' })
-        .eq('id', currentRound.id)
+      await supabase.from('rounds').update({ status: 'closed' }).eq('id', currentRound.id)
     }
-
-    // Crear nueva ronda
     const { data: newRound } = await supabase
       .from('rounds')
-      .insert({ room_id: room.id, title: null, status: 'voting' })
+      .insert({ room_id: room.id, status: 'voting' })
       .select()
       .single()
-
     if (newRound) {
-      await supabase
-        .from('rooms')
-        .update({ current_round_id: newRound.id })
-        .eq('id', room.id)
+      await supabase.from('rooms').update({ current_round_id: newRound.id }).eq('id', room.id)
     }
-
     setLoading(false)
   }
 
   return (
-    <div className="flex gap-2 flex-wrap">
+    <div className="d-flex gap-2 flex-wrap">
       {!isRevealed && (
-        <Button
+        <button
+          className="btn btn-primary"
           onClick={handleReveal}
           disabled={loading || voteCount === 0}
-          size="md"
         >
-          👁 Revelar cartas {voteCount > 0 && `(${voteCount})`}
-        </Button>
+          <i className="bi bi-eye-fill me-2"></i>
+          Revelar cartas {voteCount > 0 && <span className="badge bg-white text-primary ms-1">{voteCount}</span>}
+        </button>
       )}
-      <Button
+      <button
+        className="btn btn-outline-secondary"
         onClick={handleNewRound}
-        variant="secondary"
         disabled={loading}
-        size="md"
       >
-        🔄 Nueva ronda
-      </Button>
+        <i className="bi bi-arrow-clockwise me-2"></i>
+        Nueva ronda
+      </button>
     </div>
   )
 }

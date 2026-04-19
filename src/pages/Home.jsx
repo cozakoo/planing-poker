@@ -1,18 +1,17 @@
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { v4 as uuidv4 } from 'uuid'
 import { supabase } from '../lib/supabase'
 import { generateCode, normalizeCode } from '../lib/roomCode'
 import { CARD_SETS } from '../lib/cardSets'
 import { useRoomStore } from '../store/roomStore'
-import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 
 export default function Home() {
   const navigate = useNavigate()
   const setLocalParticipant = useRoomStore((s) => s.setLocalParticipant)
 
-  const [tab, setTab] = useState('create') // 'create' | 'join'
+  const [tab, setTab] = useState('create')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -34,20 +33,13 @@ export default function Home() {
     const participantId = uuidv4()
     let code = generateCode()
 
-    // Crear sala
     const { data: room, error: roomErr } = await supabase
       .from('rooms')
-      .insert({
-        code,
-        name: roomName.trim(),
-        card_set: cardSet,
-        host_participant_id: participantId,
-      })
+      .insert({ code, name: roomName.trim(), card_set: cardSet, host_participant_id: participantId })
       .select()
       .single()
 
     if (roomErr) {
-      // Reintento si colisión de código
       code = generateCode()
       const retry = await supabase
         .from('rooms')
@@ -63,7 +55,6 @@ export default function Home() {
 
     const roomData = room ?? (await supabase.from('rooms').select().eq('code', code).single()).data
 
-    // Crear primera ronda
     const { data: round } = await supabase
       .from('rounds')
       .insert({ room_id: roomData.id, status: 'voting' })
@@ -74,7 +65,6 @@ export default function Home() {
       await supabase.from('rooms').update({ current_round_id: round.id }).eq('id', roomData.id)
     }
 
-    // Registrar participante (host)
     await supabase.from('participants').insert({
       id: participantId,
       room_id: roomData.id,
@@ -84,7 +74,6 @@ export default function Home() {
     const participant = { id: participantId, username: hostName.trim(), room_id: roomData.id }
     localStorage.setItem('pp_participant', JSON.stringify(participant))
     setLocalParticipant(participant)
-
     navigate(`/room/${roomData.code}`)
   }
 
@@ -95,12 +84,7 @@ export default function Home() {
     setError('')
 
     const code = normalizeCode(joinCode)
-
-    const { data: room } = await supabase
-      .from('rooms')
-      .select('*')
-      .eq('code', code)
-      .single()
+    const { data: room } = await supabase.from('rooms').select('*').eq('code', code).single()
 
     if (!room) {
       setError('Sala no encontrada. Revisá el código.')
@@ -118,40 +102,43 @@ export default function Home() {
     const participant = { id: participantId, username: joinName.trim(), room_id: room.id }
     localStorage.setItem('pp_participant', JSON.stringify(participant))
     setLocalParticipant(participant)
-
     navigate(`/room/${room.code}`)
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-md space-y-6">
-        {/* Logo */}
-        <div className="text-center space-y-1">
-          <div className="text-5xl">🃏</div>
-          <h1 className="text-3xl font-bold text-white">Planning Poker</h1>
-          <p className="text-slate-400 text-sm">Estimá en equipo, en tiempo real</p>
+    <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '80vh' }}>
+      <div className="w-100" style={{ maxWidth: 460 }}>
+
+        {/* Hero */}
+        <div className="text-center mb-4">
+          <i className="bi bi-suit-spade-fill text-primary" style={{ fontSize: '3rem' }}></i>
+          <h1 className="fw-bold text-light mt-2 mb-1">Planning Poker</h1>
+          <p className="text-secondary">Estimá en equipo, en tiempo real</p>
         </div>
 
         {/* Tabs */}
-        <div className="flex bg-slate-800/60 rounded-xl p-1">
-          {['create', 'join'].map((t) => (
+        <ul className="nav nav-pills nav-fill mb-3 p-1 rounded-3" style={{ background: 'var(--bs-card-bg)' }}>
+          <li className="nav-item">
             <button
-              key={t}
-              onClick={() => { setTab(t); setError('') }}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-                tab === t
-                  ? 'bg-brand-600 text-white shadow'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
+              className={`nav-link w-100 ${tab === 'create' ? 'active' : 'text-secondary'}`}
+              onClick={() => { setTab('create'); setError('') }}
             >
-              {t === 'create' ? '✨ Crear sala' : '🚪 Unirse'}
+              <i className="bi bi-plus-circle me-1"></i>Crear sala
             </button>
-          ))}
-        </div>
+          </li>
+          <li className="nav-item">
+            <button
+              className={`nav-link w-100 ${tab === 'join' ? 'active' : 'text-secondary'}`}
+              onClick={() => { setTab('join'); setError('') }}
+            >
+              <i className="bi bi-door-open me-1"></i>Unirse
+            </button>
+          </li>
+        </ul>
 
         {/* Create */}
         {tab === 'create' && (
-          <form onSubmit={handleCreate} className="space-y-4 bg-slate-800/40 border border-slate-700/60 rounded-2xl p-6">
+          <form onSubmit={handleCreate} className="card border-secondary p-4">
             <Input
               label="Nombre de la sala"
               placeholder="Sprint 12 — Backend"
@@ -166,45 +153,51 @@ export default function Home() {
               onChange={(e) => setHostName(e.target.value)}
               required
             />
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-slate-300">Set de cartas</label>
-              <div className="flex gap-2 flex-wrap">
-                {Object.entries(CARD_SETS).map(([key, { label, cards }]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setCardSet(key)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                      cardSet === key
-                        ? 'border-brand-500 bg-brand-600/20 text-brand-300'
-                        : 'border-slate-600 text-slate-400 hover:border-slate-500'
-                    }`}
-                  >
+
+            <label className="form-label text-secondary-emphasis fw-medium mb-2">Set de cartas</label>
+            <div className="btn-group w-100 mb-3" role="group">
+              {Object.entries(CARD_SETS).map(([key, { label }]) => (
+                <Fragment key={key}>
+                  <input
+                    type="radio"
+                    className="btn-check"
+                    name="cardSet"
+                    id={`cs-${key}`}
+                    checked={cardSet === key}
+                    onChange={() => setCardSet(key)}
+                  />
+                  <label className="btn btn-outline-primary btn-sm" htmlFor={`cs-${key}`}>
                     {label}
-                    <span className="ml-1.5 text-slate-500">{cards.slice(0, 4).join(' ')}&hellip;</span>
-                  </button>
-                ))}
-              </div>
+                  </label>
+                </Fragment>
+              ))}
             </div>
-            {error && <p className="text-sm text-red-400">{error}</p>}
-            <Button type="submit" className="w-full" size="lg" disabled={loading}>
-              {loading ? 'Creando…' : 'Crear sala'}
-            </Button>
+
+            {error && <div className="alert alert-danger py-2 small">{error}</div>}
+            <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+              {loading
+                ? <><span className="spinner-border spinner-border-sm me-2"></span>Creando…</>
+                : <><i className="bi bi-plus-circle me-2"></i>Crear sala</>
+              }
+            </button>
           </form>
         )}
 
         {/* Join */}
         {tab === 'join' && (
-          <form onSubmit={handleJoin} className="space-y-4 bg-slate-800/40 border border-slate-700/60 rounded-2xl p-6">
-            <Input
-              label="Código de sala"
-              placeholder="A3F9K2"
-              value={joinCode}
-              onChange={(e) => setJoinCode(normalizeCode(e.target.value))}
-              maxLength={6}
-              className="font-mono tracking-widest text-center text-lg uppercase"
-              required
-            />
+          <form onSubmit={handleJoin} className="card border-secondary p-4">
+            <div className="mb-3">
+              <label className="form-label text-secondary-emphasis fw-medium">Código de sala</label>
+              <input
+                className="form-control bg-dark border-secondary text-light text-center fw-bold font-monospace"
+                style={{ fontSize: '1.4rem', letterSpacing: '0.3em' }}
+                placeholder="A3F9K2"
+                value={joinCode}
+                onChange={(e) => setJoinCode(normalizeCode(e.target.value))}
+                maxLength={6}
+                required
+              />
+            </div>
             <Input
               label="Tu nombre"
               placeholder="Lucas"
@@ -212,13 +205,17 @@ export default function Home() {
               onChange={(e) => setJoinName(e.target.value)}
               required
             />
-            {error && <p className="text-sm text-red-400">{error}</p>}
-            <Button type="submit" className="w-full" size="lg" disabled={loading}>
-              {loading ? 'Uniéndome…' : 'Unirse'}
-            </Button>
+            {error && <div className="alert alert-danger py-2 small">{error}</div>}
+            <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+              {loading
+                ? <><span className="spinner-border spinner-border-sm me-2"></span>Uniéndome…</>
+                : <><i className="bi bi-door-open me-2"></i>Unirse</>
+              }
+            </button>
           </form>
         )}
       </div>
     </div>
   )
 }
+

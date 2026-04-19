@@ -3,7 +3,10 @@ import { useRoomStore } from '../../store/roomStore'
 function Avatar({ name }) {
   const initials = name.slice(0, 2).toUpperCase()
   return (
-    <div className="w-9 h-9 rounded-full bg-brand-700 flex items-center justify-center text-xs font-bold text-white shrink-0">
+    <div
+      className="rounded-circle bg-primary d-flex align-items-center justify-content-center flex-shrink-0 fw-bold text-white"
+      style={{ width: 36, height: 36, fontSize: '0.75rem' }}
+    >
       {initials}
     </div>
   )
@@ -19,44 +22,44 @@ export function ParticipantList() {
   const isRevealed = currentRound?.status === 'revealed'
 
   return (
-    <div className="flex flex-col gap-2">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
-        Participantes ({participants.length})
-      </h3>
-      {participants.map((p) => {
-        const vote = votes[p.id]
-        const isHost = p.id === room?.host_participant_id
-        return (
-          <div
-            key={p.id}
-            className="flex items-center gap-3 bg-slate-800/60 rounded-lg px-3 py-2"
-          >
-            <Avatar name={p.username} />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-200 truncate">
-                {p.username}
-                {isHost && (
-                  <span className="ml-1.5 text-xs text-brand-400 font-normal">host</span>
-                )}
-              </p>
-            </div>
-            {/* Estado del voto */}
-            {currentRound && (
-              <div className="shrink-0">
-                {!vote ? (
-                  <span className="text-xs text-slate-600">—</span>
-                ) : isRevealed ? (
-                  <span className="px-2 py-0.5 rounded bg-emerald-900/50 text-emerald-300 text-sm font-bold border border-emerald-700">
-                    {vote.value}
-                  </span>
-                ) : (
-                  <span className="w-5 h-7 rounded bg-brand-700 inline-block" title="Votó" />
-                )}
+    <div>
+      <p className="text-uppercase text-secondary small fw-semibold mb-2" style={{ letterSpacing: '0.08em' }}>
+        <i className="bi bi-people-fill me-1"></i>Participantes ({participants.length})
+      </p>
+      <ul className="list-group list-group-flush">
+        {participants.map((p) => {
+          const vote = votes[p.id]
+          const isHost = p.id === room?.host_participant_id
+          return (
+            <li key={p.id} className="list-group-item bg-transparent border-secondary d-flex align-items-center gap-2 px-0 py-2">
+              <Avatar name={p.username} />
+              <div className="flex-grow-1 min-w-0">
+                <span className="text-light fw-medium text-truncate d-block" style={{ fontSize: '0.9rem' }}>
+                  {p.username}
+                  {isHost && (
+                    <span className="badge bg-primary ms-2 fw-normal" style={{ fontSize: '0.65rem' }}>host</span>
+                  )}
+                </span>
               </div>
-            )}
-          </div>
-        )
-      })}
+              {currentRound && (
+                <div className="flex-shrink-0">
+                  {!vote ? (
+                    <span className="text-secondary">—</span>
+                  ) : isRevealed ? (
+                    <span className="badge bg-success fs-6 px-2">{vote.value}</span>
+                  ) : (
+                    <span
+                      className="d-inline-block bg-primary rounded"
+                      style={{ width: 20, height: 28 }}
+                      title="Votó"
+                    />
+                  )}
+                </div>
+              )}
+            </li>
+          )
+        })}
+      </ul>
     </div>
   )
 }
