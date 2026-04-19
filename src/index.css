@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-950 text-slate-100 min-h-screen;
+  }
+}
+
+@layer components {
+  .card-poker {
+    @apply relative flex items-center justify-center rounded-xl border-2 cursor-pointer select-none
+           transition-all duration-200 font-bold text-xl
+           w-16 h-24;
+  }
+  .card-poker.unselected {
+    @apply border-slate-600 bg-slate-800 text-slate-300 hover:border-brand-500 hover:bg-slate-700 hover:scale-105;
+  }
+  .card-poker.selected {
+    @apply border-brand-500 bg-brand-600 text-white scale-110 shadow-lg shadow-brand-500/30;
+  }
+  .card-poker.disabled {
+    @apply border-slate-700 bg-slate-800/50 text-slate-500 cursor-not-allowed;
+  }
+  .card-poker.face-down {
+    @apply border-slate-600 bg-gradient-to-br from-slate-700 to-slate-800 cursor-default;
+  }
+  .card-poker.face-up {
+    @apply border-emerald-500 bg-slate-800 text-emerald-300 cursor-default;
+  }
+}
